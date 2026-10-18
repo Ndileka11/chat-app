@@ -1,0 +1,177 @@
+package com.mycompany.chatapp;
+
+import java.util.Scanner;
+
+/**
+ * QuickChat console application (Part 2). Console only - no GUI.
+ */
+public class QuickChat {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        if (!loginSucceeded(scanner)) {
+            System.out.println("Login failed. You cannot send messages.");
+            return;
+        }
+
+        System.out.println("Welcome to QuickChat.");
+        int limit = readPositiveInt(scanner, "How many messages do you wish to enter? ");
+        int entered = 0;
+        boolean running = true;
+
+        while (running) {
+            System.out.println();
+            System.out.println("1) Send Messages");
+            System.out.println("2) Show recently sent messages");
+            System.out.println("3) Quit");
+            System.out.print("Choose an option: ");
+            String choice = scanner.nextLine().trim();
+
+            switch (choice) {
+                case "1":
+                    if (entered >= limit) {
+                        System.out.println("You have already entered all " + limit + " messages.");
+                    } else {
+                        handleNewMessage(scanner, entered);
+                        entered++;
+                        if (entered == limit) {
+                            System.out.println("All messages entered. Total messages sent: "
+                                    + QuickChatMessage.returnTotalMessages());
+                        }
+                    }
+                    break;
+                case "2":
+                    System.out.println("Coming Soon.");
+                    break;
+                case "3":
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Please enter 1, 2 or 3.");
+            }
+        }
+
+        System.out.println("Total messages sent: " + QuickChatMessage.returnTotalMessages());
+        System.out.println("Goodbye!");
+    }
+
+    /**
+     * Registers the user and then logs in, using the Part 1 Login class.
+     * Returns true only when the login is successful.
+     */
+    private static boolean loginSucceeded(Scanner scanner) {
+        System.out.println("=== Register ===");
+        System.out.print("First name: ");
+        String firstName = scanner.nextLine().trim();
+        System.out.print("Last name: ");
+        String lastName = scanner.nextLine().trim();
+
+        Login login;
+        while (true) {
+            System.out.print("Username (needs an underscore, max 5 characters): ");
+            String username = scanner.nextLine().trim();
+            System.out.print("Password (8+ characters, capital letter, number, special character): ");
+            String password = scanner.nextLine();
+            System.out.print("Cell phone number (e.g. +27838968976): ");
+            String cell = scanner.nextLine().trim();
+
+            login = new Login(username, password, cell, firstName, lastName);
+            System.out.println(login.registerUser());
+
+            if (!login.checkUserName() || !login.checkPasswordComplexity()) {
+                continue;
+            }
+            if (login.checkCellPhoneNumber()) {
+                System.out.println("Cell phone number successfully added.");
+                break;
+            }
+            System.out.println("Cell phone number incorrectly formatted or does not contain "
+                    + "international code.");
+        }
+
+        System.out.println();
+        System.out.println("=== Login ===");
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            System.out.print("Username: ");
+            String enteredUsername = scanner.nextLine().trim();
+            System.out.print("Password: ");
+            String enteredPassword = scanner.nextLine();
+
+            boolean ok = login.loginUser(enteredUsername, enteredPassword);
+            System.out.println(login.returnLoginStatus(ok));
+            if (ok) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void handleNewMessage(Scanner scanner, int messageNumber) {
+        String recipient;
+        while (true) {
+            System.out.print("Recipient cell number (e.g. +27718693002): ");
+            recipient = scanner.nextLine().trim();
+            String result = QuickChatMessage.checkRecipientCell(recipient);
+            System.out.println(result);
+            if (result.equals(QuickChatMessage.CELL_SUCCESS)) {
+                break;
+            }
+        }
+
+        String text;
+        while (true) {
+            System.out.print("Enter your message (max 250 characters): ");
+            text = scanner.nextLine();
+            String result = QuickChatMessage.checkMessageLength(text);
+            System.out.println(result);
+            if (result.equals(QuickChatMessage.LENGTH_OK)) {
+                break;
+            }
+        }
+
+        QuickChatMessage message = new QuickChatMessage(messageNumber, recipient, text);
+        System.out.println("Message ID generated: " + message.getMessageId());
+
+        int option = 0;
+        while (option < 1 || option > 3) {
+            System.out.println("1) Send Message");
+            System.out.println("2) Disregard Message");
+            System.out.println("3) Store Message to send later");
+            System.out.print("Choose an option: ");
+            try {
+                option = Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                option = 0;
+            }
+        }
+
+        System.out.println(message.sentMessage(option));
+
+        if (option == 1) {
+            System.out.println();
+            System.out.println(message.getDetails());
+        } else if (option == 2) {
+            String answer = "";
+            while (!answer.equals("0")) {
+                answer = scanner.nextLine().trim();
+            }
+            System.out.println("Message deleted.");
+        }
+    }
+
+    private static int readPositiveInt(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                int value = Integer.parseInt(scanner.nextLine().trim());
+                if (value > 0) {
+                    return value;
+                }
+            } catch (NumberFormatException e) {
+                // fall through and ask again
+            }
+            System.out.println("Please enter a whole number greater than 0.");
+        }
+    }
+}
