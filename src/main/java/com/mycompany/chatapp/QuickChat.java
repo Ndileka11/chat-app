@@ -57,15 +57,54 @@ public class QuickChat {
     }
 
     /**
-     * PART 1 LOGIN GOES HERE.
-     * Ask for the username and password and call your Part 1 methods
-     * (registerUser / loginUser / returnLoginStatus). Return true only when
-     * the login is successful.
-     * It returns true for now only so you can test the menu - replace it
-     * before you hand in.
+     * Registers the user and then logs in, using the Part 1 Login class.
+     * Returns true only when the login is successful.
      */
     private static boolean loginSucceeded(Scanner scanner) {
-        return true;
+        System.out.println("=== Register ===");
+        System.out.print("First name: ");
+        String firstName = scanner.nextLine().trim();
+        System.out.print("Last name: ");
+        String lastName = scanner.nextLine().trim();
+
+        Login login;
+        while (true) {
+            System.out.print("Username (needs an underscore, max 5 characters): ");
+            String username = scanner.nextLine().trim();
+            System.out.print("Password (8+ characters, capital letter, number, special character): ");
+            String password = scanner.nextLine();
+            System.out.print("Cell phone number (e.g. +27838968976): ");
+            String cell = scanner.nextLine().trim();
+
+            login = new Login(username, password, cell, firstName, lastName);
+            System.out.println(login.registerUser());
+
+            if (!login.checkUserName() || !login.checkPasswordComplexity()) {
+                continue;
+            }
+            if (login.checkCellPhoneNumber()) {
+                System.out.println("Cell phone number successfully added.");
+                break;
+            }
+            System.out.println("Cell phone number incorrectly formatted or does not contain "
+                    + "international code.");
+        }
+
+        System.out.println();
+        System.out.println("=== Login ===");
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            System.out.print("Username: ");
+            String enteredUsername = scanner.nextLine().trim();
+            System.out.print("Password: ");
+            String enteredPassword = scanner.nextLine();
+
+            boolean ok = login.loginUser(enteredUsername, enteredPassword);
+            System.out.println(login.returnLoginStatus(ok));
+            if (ok) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void handleNewMessage(Scanner scanner, int messageNumber) {
